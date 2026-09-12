@@ -1,0 +1,29 @@
+[
+  {
+    "name": "עוף ותפו״א בתנור",
+    "subtitle": "",
+    "url": "https://example.com/chicken-potatoes",
+    "source": "שטרודל",
+    "image": "",
+    "emoji": "🍗",
+    "made": true
+  },
+  {
+    "name": "Creme Brulee At Home Without A Torch",
+    "subtitle": "קרם ברולה ללא להביור - מתכון באנגלית",
+    "url": "https://www.monpetitfour.com/creme-brulee/",
+    "source": "Mon Petit Four",
+    "image": "",
+    "emoji": "🍮",
+    "made": false
+  },
+  {
+    "name": "מאפינס אוכמניות",
+    "subtitle": "",
+    "url": "https://example.com/blueberry-muffins",
+    "source": "Foody",
+    "image": "",
+    "emoji": "🧁",
+    "made": true
+  }
+]

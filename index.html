@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ספר המתכונים של דניאל</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div>
+        <h1>🍗 עוף</h1>
+        <p>ספר המתכונים של דניאל</p>
+      </div>
+
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="חיפוש מתכון..." />
+      </div>
+    </header>
+
+    <section class="card">
+      <table class="recipe-table">
+        <thead>
+          <tr>
+            <th class="recipe-col">מתכון</th>
+            <th class="source-col">מקור</th>
+            <th class="image-col">תמונה</th>
+            <th class="made-col">בוצע</th>
+          </tr>
+        </thead>
+        <tbody id="recipesBody"></tbody>
+      </table>
+    </section>
+
+    <p class="hint">
+      בדמו הזה הנתונים מגיעים מ־<code>recipes.json</code>.
+      בשלב הבא אפשר לחבר GitHub Action שיקבל URL וימלא שם, מקור ותמונה אוטומטית.
+    </p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
