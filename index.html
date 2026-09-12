@@ -1,26 +1,28 @@
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>ספר המתכונים של דניאל</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="page">
-    <header class="topbar">
+    <header class="header">
       <div>
-        <h1>🍗 עוף</h1>
-        <p>ספר המתכונים של דניאל</p>
+        <h1>🍰 מתוקים</h1>
+        <div class="subtitle">ספר המתכונים של דניאל</div>
       </div>
-
-      <div class="search-wrap">
-        <input id="search" type="search" placeholder="חיפוש מתכון..." />
-      </div>
+      <input id="search" class="search" type="search" placeholder="חיפוש מתכון...">
     </header>
 
-    <section class="card">
-      <table class="recipe-table">
+    <section class="table-wrap">
+      <table>
         <thead>
           <tr>
             <th class="recipe-col">מתכון</th>
@@ -32,12 +34,47 @@
         <tbody id="recipesBody"></tbody>
       </table>
     </section>
-
-    <p class="hint">
-      בדמו הזה הנתונים מגיעים מ־<code>recipes.json</code>.
-      בשלב הבא אפשר לחבר GitHub Action שיקבל URL וימלא שם, מקור ותמונה אוטומטית.
-    </p>
   </main>
+
+  <!-- חלון המתכון -->
+  <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+    <section class="recipe-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button id="closeModal" class="close" aria-label="סגירה">×</button>
+
+      <div class="modal-top">
+        <img id="modalImage" class="modal-image" alt="">
+        <div class="modal-heading">
+          <div id="modalSource" class="modal-source"></div>
+          <h2 id="modalTitle"></h2>
+          <div id="modalSubtitle" class="modal-subtitle"></div>
+
+          <div class="meta">
+            <span id="modalYield"></span>
+            <span id="modalPrep"></span>
+            <span id="modalCook"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-grid">
+        <section>
+          <h3>מצרכים</h3>
+          <ul id="modalIngredients" class="ingredients"></ul>
+        </section>
+
+        <section>
+          <h3>אופן הכנה</h3>
+          <ol id="modalInstructions" class="instructions"></ol>
+        </section>
+      </div>
+
+      <div class="modal-footer">
+        <a id="originalLink" class="original-link" target="_blank" rel="noopener noreferrer">
+          למתכון המקורי ↗
+        </a>
+      </div>
+    </section>
+  </div>
 
   <script src="app.js"></script>
 </body>

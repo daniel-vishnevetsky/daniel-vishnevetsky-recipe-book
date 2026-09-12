@@ -1,29 +1,27 @@
 [
   {
-    "name": "עוף ותפו״א בתנור",
-    "subtitle": "",
-    "url": "https://example.com/chicken-potatoes",
-    "source": "שטרודל",
-    "image": "",
-    "emoji": "🍗",
-    "made": true
-  },
-  {
     "name": "Creme Brulee At Home Without A Torch",
     "subtitle": "קרם ברולה ללא להביור - מתכון באנגלית",
-    "url": "https://www.monpetitfour.com/creme-brulee/",
     "source": "Mon Petit Four",
-    "image": "",
-    "emoji": "🍮",
-    "made": false
-  },
-  {
-    "name": "מאפינס אוכמניות",
-    "subtitle": "",
-    "url": "https://example.com/blueberry-muffins",
-    "source": "Foody",
-    "image": "",
-    "emoji": "🧁",
-    "made": true
+    "url": "https://www.monpetitfour.com/creme-brulee/",
+    "image": "https://www.monpetitfour.com/wp-content/uploads/2017/02/creme-brulee_1-copy.jpg",
+    "made": false,
+    "yield": "5 מנות",
+    "prepTime": "25 דקות",
+    "cookTime": "כשעה ו־10 דקות",
+    "ingredients": [
+      "2 כוסות שמנת מתוקה",
+      "1 כפית מחית וניל",
+      "6 כפות סוכר",
+      "4 חלמונים",
+      "סוכר גס לציפוי העליון"
+    ],
+    "instructions": [
+      "מחממים תנור ל־160°C בקירוב ומביאים קומקום מים לרתיחה. מחממים את השמנת בעדינות עד סמוך לרתיחה ומוסיפים וניל.",
+      "טורפים חלמונים וסוכר. מוסיפים בהדרגה מעט מהשמנת החמה תוך טריפה, ואז משלבים את יתר השמנת.",
+      "מחלקים לכלים אישיים, מניחים אותם בתבנית גדולה ומוסיפים מים חמים לתבנית ליצירת אמבט מים.",
+      "אופים עד שהקרם כמעט יציב אך עדיין מעט רוטט במרכז. מצננים היטב.",
+      "מפזרים שכבה דקה של סוכר גס ומקרמלים מתחת לגריל העליון של התנור תוך השגחה צמודה."
+    ]
   }
 ]
