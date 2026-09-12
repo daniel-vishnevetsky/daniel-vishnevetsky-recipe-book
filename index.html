@@ -9,7 +9,112 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css">
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg:#f4f5f7; --paper:#fff; --line:#222; --blue:#0645d8; --muted:#666;
+    }
+    body {
+      margin:0; background:var(--bg); color:#111;
+      font-family:"Heebo","Segoe UI",Arial,sans-serif;
+    }
+    body.modal-open { overflow:hidden; }
+    .page { max-width:1180px; margin:28px auto; padding:0 18px 50px; }
+    .header {
+      display:flex; justify-content:space-between; align-items:end;
+      gap:22px; margin-bottom:18px;
+    }
+    h1 { margin:0; font-size:36px; font-weight:800; }
+    .subtitle { color:#444; font-size:17px; }
+    .search {
+      width:340px; max-width:100%; padding:12px 14px;
+      border:1px solid #bbb; border-radius:10px; background:#fff;
+      font:inherit; font-size:16px;
+    }
+    .table-wrap {
+      background:#fff; border-radius:12px; overflow:hidden;
+      box-shadow:0 8px 25px rgba(0,0,0,.08);
+    }
+    table { width:100%; border-collapse:collapse; table-layout:fixed; }
+    th,td {
+      border:1.5px solid var(--line);
+      text-align:center; vertical-align:middle; padding:12px;
+    }
+    th { font-size:21px; font-weight:800; }
+    .c-recipe{width:45%}.c-source{width:20%}.c-image{width:22%}.c-made{width:13%}
+    .recipe-button {
+      border:0; background:none; padding:0; cursor:pointer;
+      color:var(--blue); text-decoration:underline;
+      font:inherit; font-size:21px; font-weight:700;
+    }
+    .recipe-button:hover { color:#002c9c; }
+    .recipe-sub { margin-top:5px; font-size:14px; font-weight:500; }
+    .source { font-size:19px; font-weight:700; }
+    .thumb {
+      width:170px; height:115px; max-width:100%;
+      object-fit:cover; display:block; margin:auto;
+      border-radius:7px; border:1px solid #ddd; background:#eee;
+    }
+    .made { font-size:29px; }
+    .made-label { font-size:13px; font-weight:600; margin-top:3px; }
+
+    .hidden { display:none !important; }
+    .backdrop {
+      position:fixed; inset:0; z-index:1000;
+      display:grid; place-items:center; padding:22px;
+      background:rgba(0,0,0,.56);
+      backdrop-filter:blur(3px);
+    }
+    .modal {
+      position:relative; width:min(920px,96vw); max-height:90vh;
+      overflow:auto; background:#fff; border-radius:18px;
+      box-shadow:0 25px 80px rgba(0,0,0,.32); padding:26px;
+    }
+    .close {
+      position:absolute; top:14px; left:14px;
+      width:42px; height:42px; border:0; border-radius:50%;
+      background:#eee; cursor:pointer; font-size:28px; line-height:42px;
+    }
+    .modal-top {
+      display:grid; grid-template-columns:280px 1fr;
+      gap:24px; align-items:center; margin-bottom:22px;
+    }
+    .modal-image {
+      width:280px; height:190px; object-fit:cover;
+      border-radius:14px; background:#eee;
+    }
+    .modal-source { color:var(--muted); font-weight:700; margin-bottom:4px; }
+    .modal h2 { margin:0 0 5px; font-size:30px; line-height:1.25; }
+    .modal-sub { color:#444; }
+    .meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:13px; }
+    .meta span {
+      background:#f3f3f3; border-radius:999px;
+      padding:6px 10px; font-size:14px; font-weight:600;
+    }
+    .modal-grid {
+      display:grid; grid-template-columns:minmax(250px,.9fr) minmax(320px,1.4fr);
+      gap:32px; border-top:1px solid #ddd; padding-top:18px;
+    }
+    .modal-grid h3 { margin:0 0 10px; font-size:22px; }
+    ul,ol { margin:0; padding-right:22px; line-height:1.7; font-size:16px; }
+    li { margin-bottom:7px; }
+    .footer { border-top:1px solid #ddd; margin-top:22px; padding-top:18px; }
+    .original {
+      display:inline-block; background:#111; color:#fff;
+      text-decoration:none; border-radius:10px; padding:11px 16px; font-weight:700;
+    }
+    .original:hover { background:#333; }
+
+    @media(max-width:760px){
+      .header{flex-direction:column;align-items:stretch}
+      .search{width:100%}
+      .table-wrap{overflow-x:auto}
+      table{min-width:760px}
+      .modal{padding:18px}
+      .modal-top,.modal-grid{grid-template-columns:1fr}
+      .modal-image{width:100%;height:220px}
+    }
+  </style>
 </head>
 <body>
   <main class="page">
@@ -18,40 +123,38 @@
         <h1>🍰 מתוקים</h1>
         <div class="subtitle">ספר המתכונים של דניאל</div>
       </div>
-      <input id="search" class="search" type="search" placeholder="חיפוש מתכון...">
+      <input class="search" id="search" placeholder="חיפוש מתכון...">
     </header>
 
     <section class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th class="recipe-col">מתכון</th>
-            <th class="source-col">מקור</th>
-            <th class="image-col">תמונה</th>
-            <th class="made-col">בוצע</th>
+            <th class="c-recipe">מתכון</th>
+            <th class="c-source">מקור</th>
+            <th class="c-image">תמונה</th>
+            <th class="c-made">בוצע</th>
           </tr>
         </thead>
-        <tbody id="recipesBody"></tbody>
+        <tbody id="tbody"></tbody>
       </table>
     </section>
   </main>
 
-  <!-- חלון המתכון -->
-  <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true">
-    <section class="recipe-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button id="closeModal" class="close" aria-label="סגירה">×</button>
+  <div id="backdrop" class="backdrop hidden" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true">
+      <button id="close" class="close" aria-label="סגירה">×</button>
 
       <div class="modal-top">
-        <img id="modalImage" class="modal-image" alt="">
-        <div class="modal-heading">
-          <div id="modalSource" class="modal-source"></div>
-          <h2 id="modalTitle"></h2>
-          <div id="modalSubtitle" class="modal-subtitle"></div>
-
+        <img id="mImage" class="modal-image" alt="">
+        <div>
+          <div id="mSource" class="modal-source"></div>
+          <h2 id="mTitle"></h2>
+          <div id="mSub" class="modal-sub"></div>
           <div class="meta">
-            <span id="modalYield"></span>
-            <span id="modalPrep"></span>
-            <span id="modalCook"></span>
+            <span id="mYield"></span>
+            <span id="mPrep"></span>
+            <span id="mCook"></span>
           </div>
         </div>
       </div>
@@ -59,23 +162,114 @@
       <div class="modal-grid">
         <section>
           <h3>מצרכים</h3>
-          <ul id="modalIngredients" class="ingredients"></ul>
+          <ul id="mIngredients"></ul>
         </section>
-
         <section>
           <h3>אופן הכנה</h3>
-          <ol id="modalInstructions" class="instructions"></ol>
+          <ol id="mInstructions"></ol>
         </section>
       </div>
 
-      <div class="modal-footer">
-        <a id="originalLink" class="original-link" target="_blank" rel="noopener noreferrer">
+      <div class="footer">
+        <a id="mLink" class="original" target="_blank" rel="noopener noreferrer">
           למתכון המקורי ↗
         </a>
       </div>
     </section>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    const recipes = [{
+      name: "Creme Brulee At Home Without A Torch",
+      subtitle: "קרם ברולה ללא להביור - מתכון באנגלית",
+      source: "Mon Petit Four",
+      url: "https://www.monpetitfour.com/creme-brulee/",
+      image: "https://www.monpetitfour.com/wp-content/uploads/2017/02/creme-brulee_4-copy-1-720x720.jpg",
+      made: false,
+      yield: "5 מנות",
+      prep: "25 דקות",
+      cook: "שעה ו־10 דקות",
+      ingredients: [
+        "2 כוסות שמנת מתוקה",
+        "1 כפית מחית וניל",
+        "6 כפות סוכר",
+        "4 חלמונים",
+        "סוכר גס לקרמול"
+      ],
+      instructions: [
+        "מחממים את התנור ומחממים בעדינות את השמנת עם הווניל, בלי להביא לרתיחה מלאה.",
+        "טורפים חלמונים וסוכר, ואז מוסיפים בהדרגה את השמנת החמה תוך טריפה.",
+        "מחלקים לכלים אישיים ומניחים אותם בתבנית עם מים חמים ליצירת אמבט מים.",
+        "אופים עד שהקרם מתייצב בשוליים ועדיין מעט רוטט במרכז, ואז מצננים היטב.",
+        "מפזרים סוכר גס ומקרמלים מתחת לגריל העליון תוך השגחה צמודה."
+      ]
+    }];
+
+    const tbody = document.getElementById("tbody");
+    const search = document.getElementById("search");
+    const backdrop = document.getElementById("backdrop");
+    const closeBtn = document.getElementById("close");
+
+    function render(list){
+      tbody.innerHTML = list.map((r,i)=>`
+        <tr>
+          <td>
+            <button class="recipe-button" data-i="${i}">${r.name}</button>
+            <div class="recipe-sub">${r.subtitle}</div>
+          </td>
+          <td><div class="source">${r.source}</div></td>
+          <td>
+            <img class="thumb" src="${r.image}" alt="${r.name}"
+              onerror="this.outerHTML='<div style=&quot;padding:18px&quot;>התמונה לא נטענה</div>'">
+          </td>
+          <td>
+            <div class="made">${r.made ? "✅" : "⬜"}</div>
+            <div class="made-label">${r.made ? "הוכן" : "טרם הוכן"}</div>
+          </td>
+        </tr>`).join("");
+    }
+
+    function openRecipe(r){
+      document.getElementById("mImage").src = r.image;
+      document.getElementById("mTitle").textContent = r.name;
+      document.getElementById("mSub").textContent = r.subtitle;
+      document.getElementById("mSource").textContent = r.source;
+      document.getElementById("mYield").textContent = "🍽️ " + r.yield;
+      document.getElementById("mPrep").textContent = "⏱️ הכנה: " + r.prep;
+      document.getElementById("mCook").textContent = "🔥 אפייה: " + r.cook;
+      document.getElementById("mIngredients").innerHTML =
+        r.ingredients.map(x=>`<li>${x}</li>`).join("");
+      document.getElementById("mInstructions").innerHTML =
+        r.instructions.map(x=>`<li>${x}</li>`).join("");
+      document.getElementById("mLink").href = r.url;
+
+      backdrop.classList.remove("hidden");
+      backdrop.setAttribute("aria-hidden","false");
+      document.body.classList.add("modal-open");
+    }
+
+    function closeRecipe(){
+      backdrop.classList.add("hidden");
+      backdrop.setAttribute("aria-hidden","true");
+      document.body.classList.remove("modal-open");
+    }
+
+    tbody.addEventListener("click",e=>{
+      const btn=e.target.closest(".recipe-button");
+      if(btn) openRecipe(recipes[Number(btn.dataset.i)]);
+    });
+    closeBtn.addEventListener("click",closeRecipe);
+    backdrop.addEventListener("click",e=>{ if(e.target===backdrop) closeRecipe(); });
+    document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeRecipe(); });
+
+    search.addEventListener("input",()=>{
+      const q=search.value.trim().toLowerCase();
+      render(recipes.filter(r =>
+        `${r.name} ${r.subtitle} ${r.source}`.toLowerCase().includes(q)
+      ));
+    });
+
+    render(recipes);
+  </script>
 </body>
 </html>
