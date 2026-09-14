@@ -1,0 +1,13 @@
+{
+  "recipes": 1137,
+  "categories": 26,
+  "sources": 182,
+  "withUrl": 1092,
+  "withImage": 1126,
+  "status": {
+    "made": 236,
+    "highly": 78,
+    "not_made": 810,
+    "unknown": 13
+  }
+}
