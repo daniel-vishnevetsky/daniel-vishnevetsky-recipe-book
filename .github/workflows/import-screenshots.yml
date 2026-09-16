@@ -1,0 +1,69 @@
+name: Import recipe screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      zip_name:
+        description: "ZIP file in repository root"
+        required: true
+        default: "screenshots.zip"
+      dry_run:
+        description: "Only create report; do not update site"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install importer dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openai pillow rapidfuzz
+
+      - name: Import screenshots
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-5.6-luna
+        run: |
+          EXTRA=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            EXTRA="--dry-run"
+          fi
+          python import_screenshots.py \
+            --index index.html \
+            --zip "${{ inputs.zip_name }}" \
+            $EXTRA
+
+      - name: Upload review report
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-import-report
+          path: |
+            screenshot-import-report.csv
+            screenshot-import-report.json
+
+      - name: Commit imported recipes
+        if: ${{ inputs.dry_run == false }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html imported_images/ screenshot-import-report.csv screenshot-import-report.json || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Import recipe screenshots"
+            git push
+          fi
