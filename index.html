@@ -91,7 +91,8 @@ h1{font-size:clamp(42px,6vw,66px);line-height:1.05;margin:0 0 25px}
 @media(max-width:900px){.search{display:none}.category-grid{grid-template-columns:repeat(2,1fr)}.recipe-shell{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.source-grid{grid-template-columns:1fr 1fr}.modal-top,.modal-content{grid-template-columns:1fr}}
 @media(max-width:600px){.nav-inner{flex-wrap:wrap;padding:8px 0;gap:7px}.brand{width:100%;margin:0;text-align:center}.nav-links{margin:auto}.category-grid,.source-grid{grid-template-columns:1fr}.section-head,.toolbar{align-items:flex-start;flex-direction:column}.section{padding:40px 0}}
 </style>
-<!-- GITHUB PREBAKED BUILD: ingredients/instructions are stored in the file for all recipes; only new recipes may receive source images from the importer. -->
+<!-- FINAL BUILD: 1328 recipes total; legacy images preserved; new linked imports use automatic source previews; on-demand recipe extraction enabled -->
+<!-- TEST BUILD: exact early single-recipe extractor preserved; fresh cache namespace. -->
 </head>
 <body>
 <nav class="nav"><div class="container nav-inner">
@@ -201,46 +202,40 @@ function automaticSourceImage(r,force=false){
  return `https://api.microlink.io/?url=${encodeURIComponent(r.url)}&embed=image.url${force?"&force=true":""}`;
 }
 function recipeImage(r){
- // מתכונים ישנים: התמונה המקורית של הספר נשארת בדיוק כפי שהיא.
- if(!isNewImportedRecipe(r))return r.image||"";
- // מתכונים חדשים: אם ה-GitHub importer שמר תמונת מקור מקומית — משתמשים בה.
- if(r.url&&r.sourceImageUrl)return r.sourceImageUrl;
- // אם עדיין לא נמצאה תמונת מקור, שומרים את צילום המסך/התמונה הקיימת כ-fallback.
+ // IMPORTANT: all legacy recipes keep their original curated image exactly as before.
+ if(!isNewImportedRecipe(r)) return r.image||"";
+ // Only the newly imported batch uses automatic image discovery from the recipe URL.
+ if(r.url) return automaticSourceImage(r);
+ // A new recipe with no URL keeps its existing screenshot/image.
  return r.image||"";
 }
 function handleRecipeImageError(img,id){
- const r=RECIPES.find(x=>x.id===id);if(!r)return;
- if(isNewImportedRecipe(r)&&r.image&&img.src!==r.image){img.src=r.image;return;}
+ const r=RECIPES.find(x=>x.id===id); if(!r)return;
+ const tries=Number(img.dataset.tries||"0");
+ if(isNewImportedRecipe(r)&&r.url&&tries===0){img.dataset.tries="1";img.src=automaticSourceImage(r,true);return;}
  img.style.display="none";const ph=img.nextElementSibling;if(ph)ph.style.display="grid";
 }
 function imageMarkup(r){
  const src=recipeImage(r);
- const fallback=r.url?"ללא תמונה":"ללא קישור";
- return src?`<img class="recipe-thumb" loading="lazy" src="${esc(src)}" alt="${esc(r.title)}" onerror="handleRecipeImageError(this,'${r.id}')"><div class="photo-placeholder" style="display:none">${fallback}</div>`:`<div class="photo-placeholder">${fallback}</div>`;
+ const fallback=r.url?"":"ללא קישור";
+ return src?`<img class="recipe-thumb" loading="lazy" referrerpolicy="no-referrer" data-tries="0" src="${esc(src)}" alt="${esc(r.title)}" onerror="handleRecipeImageError(this,'${r.id}')"><div class="photo-placeholder" style="display:none">${fallback}</div>`:`<div class="photo-placeholder">${fallback}</div>`
 }
-
 function renderRecipes(){
  renderSidebar(); $("#recipeSearch").value=state.search; const all=filtered(), list=all.slice(0,state.limit);
  $("#activeCategoryTitle").textContent=state.subcategory||state.category||"כל המתכונים"; $("#resultCount").textContent=`${all.length} תוצאות`; $("#recipeContext").textContent=state.subcategory?`${state.category} ← ${state.subcategory}`:(state.category||"בחרו קטגוריה או חפשו מתכון.");
  $$("#statusFilters .filter").forEach(b=>b.classList.toggle("active",b.dataset.status===state.status));
  if(!all.length){$("#recipeRows").innerHTML=`<tr><td colspan="4"><div class="empty">לא נמצאו מתכונים.</div></td></tr>`;return}
  $("#recipeRows").innerHTML=list.map(r=>`<tr><td><button class="recipe-link" data-rid="${r.id}">${esc(r.title)}</button>${r.subtitle?`<div class="recipe-sub">${esc(r.subtitle)}</div>`:""}${!r.url?`<div class="recipe-sub">ללא קישור</div>`:""}</td><td><span class="source-name">${esc(r.source||"—")}</span></td><td>${imageMarkup(r)}</td><td>${statusCell(r)}</td></tr>`).join("")+(all.length>state.limit?`<tr><td colspan="4" class="load-more"><button id="loadMore" class="btn btn-light">הצג עוד מתכונים</button></td></tr>`:"");
- $$('[data-rid]').forEach(b=>{b.onclick=()=>openRecipe(b.dataset.rid);});
- const more=$("#loadMore");if(more)more.onclick=()=>{state.limit+=70;renderRecipes()};
+ $$('[data-rid]').forEach(b=>b.onclick=()=>openRecipe(b.dataset.rid)); const more=$("#loadMore");if(more)more.onclick=()=>{state.limit+=70;renderRecipes()};
 }
 
 
-const AUTO_EXTRACT_PREFIX="recipe_auto_extract_v6:";
-const AUTO_EXTRACT_ATTEMPT_PREFIX="recipe_auto_extract_attempt_v6:";
+const AUTO_EXTRACT_PREFIX="recipe_auto_extract_creambrulee_test_v1:";
 const AUTO_EXTRACT_JOBS=new Map();
 let CURRENT_RECIPE_ID="";
 function extractionCacheKey(r){return AUTO_EXTRACT_PREFIX+r.id+":"+(r.url||"")}
-function extractionAttemptKey(r){return AUTO_EXTRACT_ATTEMPT_PREFIX+r.id+":"+(r.url||"")}
 function readExtractionCache(r){try{return JSON.parse(localStorage.getItem(extractionCacheKey(r))||"null")}catch(e){return null}}
 function writeExtractionCache(r,data){try{localStorage.setItem(extractionCacheKey(r),JSON.stringify(data))}catch(e){}}
-function markExtractionAttempt(r){try{localStorage.setItem(extractionAttemptKey(r),String(Date.now()))}catch(e){}}
-function hasExtractionAttempt(r){try{return !!localStorage.getItem(extractionAttemptKey(r))}catch(e){return false}}
-const PAGE_TEXT_CACHE=new Map();
 function stripMarkdownLine(s){
  return String(s||"")
   .replace(/!\[[^\]]*\]\([^)]*\)/g,"")
@@ -304,33 +299,16 @@ function parseRecipeMarkdown(md){
  }
  return {ingredients,instructions};
 }
-function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 async function fetchReadableRecipe(url){
- if(PAGE_TEXT_CACHE.has(url))return PAGE_TEXT_CACHE.get(url);
  const endpoint=`https://r.jina.ai/${url}`;
- let lastErr=null;
- for(let attempt=0;attempt<2;attempt++){
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),18000);
-  try{
-   const res=await fetch(endpoint,{method:"GET",headers:{"Accept":"text/plain"},signal:controller.signal,cache:"no-store"});
-   if(!res.ok)throw new Error(`Reader ${res.status}`);
-   const txt=await res.text();
-   if(!txt||txt.length<80)throw new Error("Reader returned empty content");
-   PAGE_TEXT_CACHE.set(url,txt);
-   return txt;
-  }catch(err){
-   lastErr=err;
-   if(attempt===0)await sleep(650);
-  }finally{
-   clearTimeout(timer);
-  }
- }
- throw lastErr||new Error("Reader failed");
+ const res=await fetch(endpoint,{method:"GET",headers:{"Accept":"text/plain"}});
+ if(!res.ok)throw new Error(`Reader ${res.status}`);
+ const txt=await res.text();
+ if(!txt||txt.length<80)throw new Error("Reader returned empty content");
+ return txt;
 }
 async function autoExtractRecipe(r){
  const cached=readExtractionCache(r);if(cached)return cached;
- if(!r.url)return {ingredients:[],instructions:[],ok:false,error:"no-url"};
  if(AUTO_EXTRACT_JOBS.has(r.id))return AUTO_EXTRACT_JOBS.get(r.id);
  const job=(async()=>{
   try{
@@ -339,51 +317,46 @@ async function autoExtractRecipe(r){
    const data={...parsed,ok:!!(parsed.ingredients.length||parsed.instructions.length),ts:Date.now()};
    if(data.ok)writeExtractionCache(r,data);
    return data;
-  }catch(err){
-   return {ingredients:[],instructions:[],ok:false,error:String(err&&err.message||err),ts:Date.now()};
-  }finally{
-   markExtractionAttempt(r);
-  }
+  }catch(err){return {ingredients:[],instructions:[],ok:false,error:String(err&&err.message||err)}}
  })();
  AUTO_EXTRACT_JOBS.set(r.id,job);
  try{return await job}finally{AUTO_EXTRACT_JOBS.delete(r.id)}
 }
-function primeRecipe(id){
- const r=RECIPES.find(x=>x.id===id);
- if(!r||!r.url)return;
- if((r.ingredients&&r.ingredients.length)&&(r.instructions&&r.instructions.length))return;
- if(readExtractionCache(r))return;
- autoExtractRecipe(r).catch(()=>{});
-}
-function renderRecipeSections(r){
- const ingredients=(r.ingredients||[]).filter(Boolean);
- const instructions=(r.instructions||[]).filter(Boolean);
- $("#ingredientsBlock").innerHTML=ingredients.length
-  ?`<ul>${ingredients.map(x=>`<li>${esc(typeof x==="string"?x:(x.text||""))}</li>`).join("")}</ul>`
-  :(!r.url?"המצרכים אינם זמינים — ללא קישור.":"שליפת המצרכים לא צלחה. ניתן לצפות במתכון המלא בקישור המקורי.");
- $("#instructionsBlock").innerHTML=instructions.length
-  ?`<ol>${instructions.map(x=>`<li>${esc(typeof x==="string"?x:(x.text||""))}</li>`).join("")}</ol>`
-  :(!r.url?"אופן ההכנה אינו זמין — ללא קישור.":"שליפת אופן ההכנה לא צלחה. ניתן לצפות במתכון המלא בקישור המקורי.");
+function renderRecipeSections(r,autoData=null){
+ const cached=autoData||readExtractionCache(r)||{};
+ const ingredients=(r.ingredients&&r.ingredients.length?r.ingredients:cached.ingredients)||[];
+ const instructions=(r.instructions&&r.instructions.length?r.instructions:cached.instructions)||[];
+ $("#ingredientsBlock").innerHTML=ingredients.length?`<ul>${ingredients.map(x=>`<li>${esc(typeof x==="string"?x:(x.text||""))}</li>`).join("")}</ul>`:(r.url?"שליפת המצרכים לא צלחה. ניתן לצפות במתכון המלא בקישור המקורי.":"המצרכים אינם זמינים — ללא קישור.");
+ $("#instructionsBlock").innerHTML=instructions.length?`<ol>${instructions.map(x=>`<li>${esc(typeof x==="string"?x:(x.text||""))}</li>`).join("")}</ol>`:(r.url?"שליפת אופן ההכנה לא צלחה. ניתן לצפות במתכון המלא בקישור המקורי.":"אופן ההכנה אינו זמין — ללא קישור.");
  const hasI=ingredients.length>0,hasS=instructions.length>0;
  const status=$("#extractStatus");
- if(hasI&&hasS){status.textContent="✓ המצרכים ואופן ההכנה שמורים בספר";status.className="extract extract-ok"}
- else if(hasI||hasS){status.textContent="נשמר מראש מידע חלקי מהמקור";status.className="extract extract-warn"}
- else if(!r.url){status.textContent="ללא קישור";status.className="extract"}
- else{status.textContent="המידע המלא זמין בקישור המקורי";status.className="extract extract-warn"}
+ if(hasI&&hasS){status.textContent="✓ המצרכים ואופן ההכנה זמינים";status.className="extract extract-ok"}
+ else if(hasI||hasS){status.textContent="שליפה חלקית — נמצא רק חלק מהמידע";status.className="extract extract-warn"}
+ else if(!r.url){status.textContent="ללא קישור — לא ניתן לבצע שליפה אוטומטית";status.className="extract"}
+ else{status.textContent="שליפת המידע מהקישור טרם הצליחה";status.className="extract extract-warn"}
  return {hasI,hasS};
 }
-async function tryAutomaticExtraction(r){return renderRecipeSections(r);}
-function primeRecipe(id){}
+async function tryAutomaticExtraction(r){
+ const existing=renderRecipeSections(r);
+ if(!r.url||(existing.hasI&&existing.hasS))return;
+ const status=$("#extractStatus");
+ status.innerHTML='<span class="auto-loading">מנסה לשלוף אוטומטית מצרכים ואופן הכנה מהקישור…</span>';
+ status.className="extract";
+ const data=await autoExtractRecipe(r);
+ if(CURRENT_RECIPE_ID!==r.id)return;
+ renderRecipeSections(r,data);
+}
 
 function openRecipe(id){
  const r=RECIPES.find(x=>x.id===id);if(!r)return;CURRENT_RECIPE_ID=id;
  const mi=$("#modalRecipeImage"), mn=$("#modalNoImage"); const src=recipeImage(r);
- if(src){mi.dataset.tries="0";mi.src=src;mi.style.display="block";mn.style.display="none";mi.onerror=()=>handleRecipeImageError(mi,r.id);}else{mi.removeAttribute("src");mi.style.display="none";mn.style.display="inline";mn.textContent=r.url?"ללא תמונה":"ללא קישור";}
+ if(src){mi.dataset.tries="0";mi.src=src;mi.style.display="block";mn.style.display="none";mi.onerror=()=>handleRecipeImageError(mi,r.id);}else{mi.removeAttribute("src");mi.style.display="none";mn.style.display="inline";mn.textContent=r.url?"":"ללא קישור";}
  $("#modalTitle").textContent=r.title;$("#modalSub").textContent=r.subtitle||"";$("#modalSource").textContent=r.source||"";
  $("#modalMeta").innerHTML=[r.category,r.subcategory,r.status==="made"?"הוכן":r.status==="not_made"?"טרם הוכן":r.status==="highly"?"Highly Recommended":""].filter(Boolean).map(x=>`<span>${esc(x)}</span>`).join("");
  renderRecipeSections(r);
  $("#modalLinkArea").innerHTML=r.linkStatus==="broken"?`<span class="no-link">קישור תקול</span>`:r.url?`<a class="original" href="${esc(r.url)}" target="_blank" rel="noopener">למתכון המקורי ↗</a>`:`<span class="no-link">ללא קישור</span>`;
  $("#modalNote").textContent=r.note||"";$("#modal").classList.add("open");
+ tryAutomaticExtraction(r);
 }
 function closeModal(){CURRENT_RECIPE_ID="";$("#modal").classList.remove("open")}
 
@@ -404,5 +377,5 @@ $("#clearFilters").onclick=()=>{state.category="";state.subcategory="";state.exp
 $("#sourceSearch").addEventListener("input",e=>{state.sourceSearch=e.target.value;renderSources()});
 $("#closeModal").onclick=closeModal;$("#modal").onclick=e=>{if(e.target.id==="modal")closeModal()};document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 </script>
-<!-- GitHub-ready static index: no extraction runs in the visitor browser. -->
+<!-- Recipe-book revision: legacy images preserved; only newly imported linked recipes use automatic source-image previews; new unlinked recipes retain screenshots; on-demand ingredient/instruction extraction with cached fallback. -->
 </body></html>
